@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -18,29 +18,18 @@ export default function ReviewPaper() {
   const [reviewStatus, setReviewStatus] = useState("Accepted");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    // Redirect if user is not a reviewer
-    if (sessionStatus === "authenticated" && session?.user?.role !== "reviewer") {
-      toast.error("Only reviewers can access this page");
-      router.push("/");
-      return;
-    }
-    
-    if (sessionStatus === "authenticated" && paperId) {
-      fetchPaperDetails();
-    }
-  }, [paperId, sessionStatus, session]);
-
-  const fetchPaperDetails = async () => {
+ // Added missing dependencies
+  
+  const fetchPaperDetails = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/reviewer/paper/${paperId}`);
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch paper details");
       }
-
+  
       setPaper(data.paper);
     } catch (error) {
       console.error("Error fetching paper:", error);
@@ -48,7 +37,19 @@ export default function ReviewPaper() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [paperId]); 
+  useEffect(() => {
+    // Redirect if user is not a reviewer
+    if (sessionStatus === "authenticated" && session?.user?.role !== "reviewer") {
+      toast.error("Only reviewers can access this page");
+      router.push("/");
+      return;
+    }
+  
+    if (sessionStatus === "authenticated" && paperId) {
+      fetchPaperDetails();
+    }
+  }, [paperId, sessionStatus, session, fetchPaperDetails, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

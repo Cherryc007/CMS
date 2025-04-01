@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -14,12 +14,8 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState('All');
   
   const categories = ['All', 'Announcement', 'News', 'Update', 'Event'];
-
-  useEffect(() => {
-    fetchPosts();
-  }, [activeCategory]);
-
-  const fetchPosts = async () => {
+  // Use useCallback to memoize fetchPosts and prevent infinite re-render
+  const fetchPosts = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -48,7 +44,11 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeCategory]); // Dependency on activeCategory
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]); // Trigger the fetchPosts function when it changes
 
   return (
     <div className="container mx-auto px-4 py-8">

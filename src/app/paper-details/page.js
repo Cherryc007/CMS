@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
@@ -22,9 +22,9 @@ export default function PaperDetails() {
     } else if (status === "unauthenticated") {
       router.push("/login");
     }
-  }, [status, paperId]);
-
-  const fetchPaperDetails = async () => {
+  }, [status, paperId, fetchPaperDetails, router]); // Added missing dependencies
+  
+  const fetchPaperDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/author/papers?id=${paperId}`);
@@ -40,14 +40,14 @@ export default function PaperDetails() {
       if (!data.papers || data.papers.length === 0) {
         throw new Error("Paper not found");
       }
-
+  
       // Find the specific paper in the response
       const paperDetails = data.papers.find(p => p.id === paperId);
       
       if (!paperDetails) {
         throw new Error("Paper not found");
       }
-
+  
       setPaper(paperDetails);
     } catch (error) {
       console.error("Error fetching paper details:", error);
@@ -56,8 +56,8 @@ export default function PaperDetails() {
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [paperId]); // UseCallback dependency to prevent recreation
+  
   const getStatusBadgeColor = (status) => {
     switch (status) {
       case "Pending":

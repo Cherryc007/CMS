@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
@@ -17,36 +17,23 @@ export default function ReviewerDashboard() {
     reviewed: 0
   });
 
-  useEffect(() => {
-    // Redirect if user is not a reviewer
-    if (status === "authenticated" && session?.user?.role !== "reviewer") {
-      toast.error("Only reviewers can access this page");
-      router.push("/");
-      return;
-    }
-    
-    if (status === "authenticated") {
-      fetchAssignedPapers();
-    }
-  }, [status, session]);
-
-  const fetchAssignedPapers = async () => {
+  const fetchAssignedPapers = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch("/api/reviewer/papers");
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch assigned papers");
       }
-
+  
       setPapers(data.papers);
-      
+  
       // Calculate statistics
       const total = data.papers.length;
       const reviewed = data.papers.filter(p => p.hasReviewed).length;
       const pending = total - reviewed;
-      
+  
       setStats({
         total,
         pending,
@@ -58,7 +45,20 @@ export default function ReviewerDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+  useEffect(() => {
+    // Redirect if user is not a reviewer
+    if (status === "authenticated" && session?.user?.role !== "reviewer") {
+      toast.error("Only reviewers can access this page");
+      router.push("/");
+      return;
+    }
+  
+    if (status === "authenticated") {
+      fetchAssignedPapers();
+    }
+  }, [status, session, fetchAssignedPapers, router]);
+  
 
   if (status === "loading" || isLoading) {
     return (
