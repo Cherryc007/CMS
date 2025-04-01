@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "react-hot-toast";
@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, FileText, Download, Clock, User, Calendar, CheckCircle, XCircle } from "lucide-react";
 
-export default function PaperDetails() {
+function PaperDetails() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -186,61 +186,22 @@ export default function PaperDetails() {
                         <p className="text-sm text-gray-600 dark:text-gray-400">Waiting for reviewer assignment</p>
                       </div>
                     </div>
-                  )}
-                  
-
-                  <div className="flex items-start">
-                    <FileText className="w-5 h-5 text-gray-500 mr-2 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Reviews Received</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{paper.reviews ? paper.reviews.length : 0}</p>
-                    </div>
-                  </div>
+                  )} 
                 </div>
               </div>
             </div>
-            
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Abstract</h2>
-              <p className="text-gray-600 dark:text-gray-300 text-sm whitespace-pre-line">
-                {paper.abstract}
-              </p>
-            </div>
-            
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Paper File</h2>
-              <a
-                href={paper.fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Paper
-              </a>
-            </div>
-            
-            {paper.reviews && paper.reviews.length > 0 && (
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Reviews</h2>
-                {paper.reviews.map((review, index) => (
-                  <div key={index} className="border-b border-gray-200 dark:border-gray-700 py-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{review.comment}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{review.date}</p>
-                    <div className="mt-2">
-                      <span
-                        className={`inline-block text-xs px-2 py-1 rounded ${getStatusBadgeColor(review.status)}`}
-                      >
-                        {review.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// Wrap the PaperDetails component inside Suspense
+export default function PaperDetailsWithSuspense() {
+  return (
+    <Suspense fallback={<div>Loading Paper Details...</div>}>
+      <PaperDetails />
+    </Suspense>
   );
 }
