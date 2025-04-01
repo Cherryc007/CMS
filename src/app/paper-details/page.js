@@ -15,14 +15,6 @@ export default function PaperDetails() {
   
   const [paper, setPaper] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (status === "authenticated" && paperId) {
-      fetchPaperDetails();
-    } else if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, paperId, fetchPaperDetails, router]); // Added missing dependencies
   
   const fetchPaperDetails = useCallback(async () => {
     try {
@@ -57,6 +49,13 @@ export default function PaperDetails() {
       setLoading(false);
     }
   }, [paperId]); // UseCallback dependency to prevent recreation
+  useEffect(() => {
+    if (status === "authenticated" && paperId) {
+      fetchPaperDetails();
+    } else if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, paperId, fetchPaperDetails, router]); // Added missing dependencies
   
   const getStatusBadgeColor = (status) => {
     switch (status) {

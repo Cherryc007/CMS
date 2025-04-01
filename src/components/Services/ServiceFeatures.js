@@ -24,27 +24,28 @@ export default function ServiceFeatures() {
   const [isInView, setIsInView] = useState(false);
 
   // Use IntersectionObserver to trigger animations only when in view
-  useEffect(() => {
-    if (!sectionRef.current) return;
-    
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    
-    observer.observe(sectionRef.current);
-    
-    return () => {
-      if (sectionRef.current) {
+useEffect(() => {
+  if (!sectionRef.current) return;
+
+  const currentRef = sectionRef.current; // Store the current reference
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        setIsInView(true);
         observer.disconnect();
       }
-    };
-  }, []);
+    },
+    { threshold: 0.1 }
+  );
+
+  observer.observe(currentRef);
+
+  return () => {
+    observer.unobserve(currentRef); // Ensure observer is cleaned up correctly
+    observer.disconnect();
+  };
+}, []);
+
 
   const features = [
     {

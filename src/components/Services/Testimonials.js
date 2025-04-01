@@ -89,7 +89,8 @@ export default function Testimonials() {
   // Observer to start animations only when the section is in view
   useEffect(() => {
     if (!sectionRef.current) return;
-    
+
+    const currentRef = sectionRef.current; // Store the current ref to avoid issues
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -99,17 +100,15 @@ export default function Testimonials() {
       },
       { threshold: 0.2 }
     );
-    
-    observer.observe(sectionRef.current);
-    
-    return () => {
-      if (sectionRef.current) {
-        observer.disconnect();
-      }
-    };
-  }, []);
 
-  useEffect(() => {
+    observer.observe(currentRef);
+
+    return () => {
+      observer.disconnect(); // Use stored ref to avoid accessing a potentially null value
+    };
+}, []);
+
+useEffect(() => {
     if (autoplay && isVisible) {
       autoplayTimeoutRef.current = setTimeout(() => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
@@ -117,11 +116,9 @@ export default function Testimonials() {
     }
 
     return () => {
-      if (autoplayTimeoutRef.current) {
-        clearTimeout(autoplayTimeoutRef.current);
-      }
+      clearTimeout(autoplayTimeoutRef.current); // No need for extra null check; clearTimeout handles null
     };
-  }, [currentIndex, autoplay, testimonials.length, isVisible]);
+}, [currentIndex, autoplay, testimonials.length, isVisible]);
 
   const handleDotClick = (index) => {
     if (autoplayTimeoutRef.current) {

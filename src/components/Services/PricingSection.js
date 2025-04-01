@@ -67,7 +67,9 @@ export default function PricingSection() {
   // Observer to only trigger animations when section is in view
   useEffect(() => {
     if (!sectionRef.current) return;
-    
+
+    const currentRef = sectionRef.current; // Store the current ref in a variable
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -77,15 +79,16 @@ export default function PricingSection() {
       },
       { threshold: 0.1 }
     );
-    
-    observer.observe(sectionRef.current);
-    
+
+    observer.observe(currentRef);
+
     return () => {
-      if (sectionRef.current) {
+      if (currentRef) {
         observer.disconnect();
       }
     };
-  }, []);
+}, []); 
+
   
   const plans = [
     {

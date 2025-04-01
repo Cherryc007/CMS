@@ -73,7 +73,9 @@ export default function ContactSection() {
   // Use IntersectionObserver to trigger animations only when in view
   useEffect(() => {
     if (!sectionRef.current) return;
-    
+
+    const currentRef = sectionRef.current; // Store ref in a variable
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -83,11 +85,11 @@ export default function ContactSection() {
       },
       { threshold: 0.1 }
     );
-    
-    observer.observe(sectionRef.current);
-    
+
+    observer.observe(currentRef);
+
     return () => {
-      if (sectionRef.current) {
+      if (currentRef) {
         observer.disconnect();
       }
     };

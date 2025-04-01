@@ -48,7 +48,9 @@ export default function FAQSection() {
   // Use IntersectionObserver to trigger animations only when in view
   useEffect(() => {
     if (!sectionRef.current) return;
-    
+
+    const currentRef = sectionRef.current; // Store the ref value to prevent null issues
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -58,19 +60,19 @@ export default function FAQSection() {
       },
       { threshold: 0.1 }
     );
-    
-    observer.observe(sectionRef.current);
-    
+
+    observer.observe(currentRef);
+
     return () => {
-      if (sectionRef.current) {
+      if (currentRef) {
         observer.disconnect();
       }
     };
-  }, []);
+}, []); // No dependencies required
 
-  const toggleFAQ = (id) => {
-    setOpenFAQ(openFAQ === id ? null : id);
-  };
+const toggleFAQ = (id) => {
+    setOpenFAQ((prev) => (prev === id ? null : id)); // Functional state update for better performance
+};
 
   const faqs = [
     {
