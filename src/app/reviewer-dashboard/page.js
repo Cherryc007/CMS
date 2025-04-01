@@ -46,6 +46,7 @@ export default function ReviewerDashboard() {
       setIsLoading(false);
     }
   }, []);
+
   useEffect(() => {
     // Redirect if user is not a reviewer
     if (status === "authenticated" && session?.user?.role !== "reviewer") {
@@ -53,12 +54,11 @@ export default function ReviewerDashboard() {
       router.push("/");
       return;
     }
-  
+
     if (status === "authenticated") {
       fetchAssignedPapers();
     }
-  }, [status, session, fetchAssignedPapers, router]);
-  
+  }, [status, session, fetchAssignedPapers, router]);  // Added 'fetchAssignedPapers' and 'router' to the dependencies array
 
   if (status === "loading" || isLoading) {
     return (
@@ -162,4 +162,4 @@ export default function ReviewerDashboard() {
       )}
     </div>
   );
-} 
+}

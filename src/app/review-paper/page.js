@@ -18,8 +18,7 @@ export default function ReviewPaper() {
   const [reviewStatus, setReviewStatus] = useState("Accepted");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
- // Added missing dependencies
-  
+  // Added missing dependencies
   const fetchPaperDetails = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -37,7 +36,8 @@ export default function ReviewPaper() {
     } finally {
       setIsLoading(false);
     }
-  }, [paperId]); 
+  }, [paperId]);
+
   useEffect(() => {
     // Redirect if user is not a reviewer
     if (sessionStatus === "authenticated" && session?.user?.role !== "reviewer") {
@@ -45,11 +45,11 @@ export default function ReviewPaper() {
       router.push("/");
       return;
     }
-  
+
     if (sessionStatus === "authenticated" && paperId) {
       fetchPaperDetails();
     }
-  }, [paperId, sessionStatus, session, fetchPaperDetails, router]);
+  }, [paperId, sessionStatus, session, fetchPaperDetails, router]); // Added missing dependencies here
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -161,9 +161,7 @@ export default function ReviewPaper() {
                     key={star}
                     type="button"
                     onClick={() => setRating(star)}
-                    className={`text-2xl ${
-                      star <= rating ? "text-yellow-400" : "text-gray-300"
-                    }`}
+                    className={`text-2xl ${star <= rating ? "text-yellow-400" : "text-gray-300"}`}
                   >
                     ★
                   </button>
@@ -203,9 +201,7 @@ export default function ReviewPaper() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  isSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isSubmitting ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {isSubmitting ? "Submitting..." : "Submit Review"}
               </button>
@@ -215,4 +211,4 @@ export default function ReviewPaper() {
       </motion.div>
     </div>
   );
-} 
+}

@@ -44,11 +44,38 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeCategory]); // Dependency on activeCategory
+  }, []); // Dependency on activeCategory
 
   useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setIsLoading(true);
+  
+        let url = '/api/posts?limit=20';
+        if (activeCategory !== 'All') {
+          url += `&category=${activeCategory}`;
+        }
+  
+        const response = await fetch(url);
+        const data = await response.json();
+  
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch posts");
+        }
+  
+        setFeaturedPosts(data.posts.filter(post => post.featured));
+        setPosts(data.posts.filter(post => !post.featured));
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+        toast.error("Failed to load posts");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
     fetchPosts();
-  }, [fetchPosts]); // Trigger the fetchPosts function when it changes
+  }, [activeCategory]); // Only depends on activeCategory
+  
 
   return (
     <div className="container mx-auto px-4 py-8">
