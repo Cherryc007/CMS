@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 
-export default function ReviewPaper() {
+function ReviewPaperContent() {
   const searchParams = useSearchParams();
   const paperId = searchParams.get("id");
   const router = useRouter();
@@ -210,5 +210,13 @@ export default function ReviewPaper() {
         </form>
       </motion.div>
     </div>
+  );
+}
+
+export default function ReviewPaper() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReviewPaperContent />
+    </Suspense>
   );
 }

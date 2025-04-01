@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function ReviewerDashboard() {
+function ReviewerDashboardContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [papers, setPapers] = useState([]);
@@ -58,7 +58,7 @@ export default function ReviewerDashboard() {
     if (status === "authenticated") {
       fetchAssignedPapers();
     }
-  }, [status, session, fetchAssignedPapers, router]);  // Added 'fetchAssignedPapers' and 'router' to the dependencies array
+  }, [status, session, fetchAssignedPapers, router]);
 
   if (status === "loading" || isLoading) {
     return (
@@ -161,5 +161,13 @@ export default function ReviewerDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ReviewerDashboard() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <ReviewerDashboardContent />
+    </Suspense>
   );
 }
