@@ -1,10 +1,10 @@
 import NextAuth from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import connectDB from "./lib/connectDB";
 import User from "./models/userModel";
-import GoogleProvider from "next-auth/providers/google";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
@@ -18,120 +18,72 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
-      // The name to display on the sign in form (e.g. "Sign in with...")
       id: "credentials",
       name: "Credentials",
-      // `credentials` is used to generate a form on the sign in page.
-      // You can specify which fields should be submitted, by adding keys to the `credentials` object.
-      // e.g. domain, username, password, 2FA token, etc.
-      // You can pass any HTML attribute to the <input> tag through the object.
       credentials: {
         email: { label: "Email", type: "email", placeholder: "email@example.com" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
-        try {
-          // Add logic here to look up the user from the credentials supplied
-          await connectDB();
-          
-          if (!credentials?.email || !credentials?.password) {
-            throw new Error("Email and password are required");
-          }
+      async authorize(credentials) {
+        await connectDB();
 
-          const user = await User.findOne({
-            email: credentials.email,
-          });
-
-          if (!user) {
-            throw new Error("User not found");
-          }
-
-          // Check if the user has a password (they might have signed up with OAuth)
-          if (!user.password) {
-            throw new Error("Please sign in with the provider you used to register");
-          }
-
-          const isMatch = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-
-          if (!isMatch) {
-            throw new Error("Invalid email or password");
-          }
-
-          // Return user object with required fields for next-auth
-          return {
-            id: user._id.toString(),
-            name: user.name,
-            email: user.email,
-            role: user.role || "author",
-          };
-        } catch (error) {
-          console.error("Authorize error:", error);
-          throw new Error(error.message || "Authentication failed");
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
         }
+
+        const user = await User.findOne({ email: credentials.email });
+
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        if (!user.password) {
+          throw new Error("Please sign in with the provider you used to register");
+        }
+
+        const isMatch = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isMatch) {
+          throw new Error("Invalid email or password");
+        }
+
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role || "author",
+        };
       },
     }),
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account && (account.provider === "google" || account.provider === "github")) {
+      if (account.provider === "google" || account.provider === "github") {
         await connectDB();
         try {
-          const existingUser = await User.findOne({
-            email: user.email,
-          });
+          let existingUser = await User.findOne({ email: user.email });
 
           if (!existingUser) {
-            // Create a new user in the database
-            const response = await fetch(
-              `${process.env.NEXTAUTH_URL}/api/signUp`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  name: user.name,
-                  email: user.email,
-                  password: "defaultPassword",
-                  role: "author",
-                  isVerified: true,
-                }),
-              }
-            );
-
-            if (!response.ok) {
-              throw new Error(`Failed to create user: ${response.status}`);
-            }
-
-            const data = await response.json();
-            if (!data.success) {
-              throw new Error(`API error: ${data.message}`);
-            }
-
-            // Set the role in the user object
-            user.role = "author";
-          } else {
-            // If user exists, get their role from the database
-            user.role = existingUser.role;
+            existingUser = new User({
+              name: user.name,
+              email: user.email,
+              password: "", // OAuth users don’t have a password
+              role: "author",
+              isVerified: true,
+            });
+            await existingUser.save();
           }
 
-          // Ensure the role is set before returning
-          if (!user.role) {
-            user.role = "author"; // Fallback to author if no role is set
-          }
-
+          user.role = existingUser.role || "author";
           return true;
         } catch (error) {
-          console.error("Sign in error:", error);
+          console.error("Sign-in error:", error);
           return false;
         }
       }
       return true;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ baseUrl }) {
       return baseUrl;
     },
     async jwt({ token, user }) {
