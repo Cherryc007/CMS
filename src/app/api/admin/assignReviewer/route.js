@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import connectDB from "@/lib/connectDB";
 import Paper from "@/models/paperModel";
-import authOptions from "@/lib/authOptions"; // Ensure this file properly exports auth options for NextAuth
+import { auth } from "@/auth";
 
 export async function POST(request) {
   try {
@@ -63,4 +62,4 @@ export async function POST(request) {
       message: "Failed to assign reviewer" 
     }, { status: 500 });
   }
-}
+} 
