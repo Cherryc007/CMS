@@ -75,38 +75,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-async signIn({ user, account }) {
-  if (account.provider === "google" || account.provider === "github") {
-    await connectDB();
+    async signIn({ user, account, profile }) {
+      if (account.provider === "google" || account.provider === "github") {
+        await connectDB();
     
-    try {
-      let existingUser = await User.findOne({ email: user.email });
-
-      if (!existingUser) {
-        // Directly create the user in the database instead of using `fetch`
-        existingUser = new User({
-          name: user.name,
-          email: user.email,
-          password: "", // OAuth users don’t have a password
-          role: "author",
-          isVerified: true,
-        });
-
-        await existingUser.save();
+        try {
+          let existingUser = await User.findOne({ email: user.email });
+    
+          if (!existingUser) {
+            // Directly create the user in the database
+            existingUser = new User({
+              name: user.name || profile.name,
+              email: user.email,
+              password: "", // OAuth users don’t need passwords
+              role: "author",
+              isVerified: true,
+            });
+    
+            await existingUser.save();
+          }
+    
+          // Ensure the role is set
+          user.id = existingUser._id.toString();
+          user.role = existingUser.role || "author"; 
+    
+          return true;
+        } catch (error) {
+          console.error("Sign-in error:", error);
+          return false; // Returning false causes "Access Denied"
+        }
       }
-
-      // Ensure the role is set
-      user.id = existingUser._id.toString();
-      user.role = existingUser.role || "author"; 
-
       return true;
-    } catch (error) {
-      console.error("Sign-in error:", error);
-      return false; // Returning false causes "Access Denied"
-    }
-  }
-  return true;
-},
+    },
+    
     async redirect({ url, baseUrl }) {
       return baseUrl;
     },
@@ -124,11 +125,11 @@ async signIn({ user, account }) {
         session.user.id = token.id;
         session.user.email = token.email;
         session.user.name = token.name;
-        session.user.role = token.role;
+        session.user.role = token.role || "author"; // Ensure role is included
       }
       return session;
-    },
-  },
+    }
+  },   
   pages: {
     signIn: "/login",
     error: "/login",
