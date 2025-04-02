@@ -51,7 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user._id.toString(),
           name: user.name,
           email: user.email,
-          role: user.role || "author",
+          role: user.role || "author", // ✅ Default role: "author"
         };
       },
     }),
@@ -60,38 +60,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account }) {
       if (account.provider === "google" || account.provider === "github") {
         await connectDB();
-        try {
-          let existingUser = await User.findOne({ email: user.email });
+        let existingUser = await User.findOne({ email: user.email });
 
-          if (!existingUser) {
-            existingUser = new User({
-              name: user.name,
-              email: user.email,
-              password: "", // OAuth users don’t have a password
-              role: "author",
-              isVerified: true,
-            });
-            await existingUser.save();
-          }
-
-          user.role = existingUser.role || "author";
-          return true;
-        } catch (error) {
-          console.error("Sign-in error:", error);
-          return false;
+        if (!existingUser) {
+          existingUser = new User({
+            name: user.name,
+            email: user.email,
+            password: "", // OAuth users don’t have a password
+            role: "author", // ✅ Default role: "author"
+            isVerified: true,
+          });
+          await existingUser.save();
         }
+
+        user.role = existingUser.role || "author"; // ✅ Assign default role
+        return true;
       }
       return true;
-    },
-    async redirect({ baseUrl }) {
-      return baseUrl;
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.role = user.role;
+        token.role = user.role || "author"; // ✅ Default role: "author"
       }
       return token;
     },
@@ -100,7 +92,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id;
         session.user.email = token.email;
         session.user.name = token.name;
-        session.user.role = token.role;
+        session.user.role = token.role || "author"; // ✅ Default role: "author"
       }
       return session;
     },
