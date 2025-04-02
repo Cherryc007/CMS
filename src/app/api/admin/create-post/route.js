@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/connectDB";
 import Post from "@/models/postModel";
-import { auth } from "@/auth";
+import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
 export async function POST(request) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     // Check if user is authenticated and has admin role
     if (!session || session.user.role !== "admin") {
