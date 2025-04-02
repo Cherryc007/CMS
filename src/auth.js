@@ -75,62 +75,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account }) {
-      if (account && (account.provider === "google" || account.provider === "github")) {
-        await connectDB();
-        try {
-          const existingUser = await User.findOne({
-            email: user.email,
-          });
+async signIn({ user, account }) {
+  if (account.provider === "google" || account.provider === "github") {
+    await connectDB();
+    
+    try {
+      let existingUser = await User.findOne({ email: user.email });
 
-          if (!existingUser) {
-            // Create a new user in the database
-            const response = await fetch(
-              `${process.env.NEXTAUTH_URL}/api/signUp`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  name: user.name,
-                  email: user.email,
-                  password: "defaultPassword",
-                  role: "author",
-                  isVerified: true,
-                }),
-              }
-            );
+      if (!existingUser) {
+        // Directly create the user in the database instead of using `fetch`
+        existingUser = new User({
+          name: user.name,
+          email: user.email,
+          password: "", // OAuth users don’t have a password
+          role: "author",
+          isVerified: true,
+        });
 
-            if (!response.ok) {
-              throw new Error(`Failed to create user: ${response.status}`);
-            }
-
-            const data = await response.json();
-            if (!data.success) {
-              throw new Error(`API error: ${data.message}`);
-            }
-
-            // Set the role in the user object
-            user.role = "author";
-          } else {
-            // If user exists, get their role from the database
-            user.role = existingUser.role;
-          }
-
-          // Ensure the role is set before returning
-          if (!user.role) {
-            user.role = "author"; // Fallback to author if no role is set
-          }
-
-          return true;
-        } catch (error) {
-          console.error("Sign in error:", error);
-          return false;
-        }
+        await existingUser.save();
       }
+
+      // Ensure the role is set
+      user.id = existingUser._id.toString();
+      user.role = existingUser.role || "author"; 
+
       return true;
-    },
+    } catch (error) {
+      console.error("Sign-in error:", error);
+      return false; // Returning false causes "Access Denied"
+    }
+  }
+  return true;
+},
     async redirect({ url, baseUrl }) {
       return baseUrl;
     },
@@ -139,7 +115,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.role = user.role;
+        token.role = user.role || "author"; // Ensure role is always present
       }
       return token;
     },
