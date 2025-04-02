@@ -131,3 +131,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: "/login",
   },
 });
+export { handler as GET, handler as POST };
