@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next"; 
+import { getServerSession } from "next-auth";
 import connectDB from "@/lib/connectDB";
 import Paper from "@/models/paperModel";
 import authOptions from "@/lib/authOptions"; // Ensure this file properly exports auth options for NextAuth
