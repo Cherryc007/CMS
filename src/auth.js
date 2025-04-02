@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import authOptions from "@/lib/authOptions"; 
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -7,7 +6,7 @@ import connectDB from "./lib/connectDB";
 import User from "./models/userModel";
 import GoogleProvider from "next-auth/providers/google";
 
-export const { handlers, signIn, signOut, auth } = NextAuth(authOptions)({
+export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GitHubProvider({
@@ -76,39 +75,62 @@ export const { handlers, signIn, signOut, auth } = NextAuth(authOptions)({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
-      if (account.provider === "google" || account.provider === "github") {
+    async signIn({ user, account }) {
+      if (account && (account.provider === "google" || account.provider === "github")) {
         await connectDB();
-    
         try {
-          let existingUser = await User.findOne({ email: user.email });
-    
+          const existingUser = await User.findOne({
+            email: user.email,
+          });
+
           if (!existingUser) {
-            // Directly create the user in the database
-            existingUser = new User({
-              name: user.name || profile.name,
-              email: user.email,
-              password: "", // OAuth users don’t need passwords
-              role: "author",
-              isVerified: true,
-            });
-    
-            await existingUser.save();
+            // Create a new user in the database
+            const response = await fetch(
+              `${process.env.NEXTAUTH_URL}/api/signUp`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  name: user.name,
+                  email: user.email,
+                  password: "defaultPassword",
+                  role: "author",
+                  isVerified: true,
+                }),
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(`Failed to create user: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (!data.success) {
+              throw new Error(`API error: ${data.message}`);
+            }
+
+            // Set the role in the user object
+            user.role = "author";
+          } else {
+            // If user exists, get their role from the database
+            user.role = existingUser.role;
           }
-    
-          // Ensure the role is set
-          user.id = existingUser._id.toString();
-          user.role = existingUser.role || "author"; 
-    
+
+          // Ensure the role is set before returning
+          if (!user.role) {
+            user.role = "author"; // Fallback to author if no role is set
+          }
+
           return true;
         } catch (error) {
-          console.error("Sign-in error:", error);
-          return false; // Returning false causes "Access Denied"
+          console.error("Sign in error:", error);
+          return false;
         }
       }
       return true;
     },
-    
     async redirect({ url, baseUrl }) {
       return baseUrl;
     },
@@ -117,7 +139,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth(authOptions)({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.role = user.role || "author"; // Ensure role is always present
+        token.role = user.role;
       }
       return token;
     },
@@ -126,11 +148,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth(authOptions)({
         session.user.id = token.id;
         session.user.email = token.email;
         session.user.name = token.name;
-        session.user.role = token.role || "author"; // Ensure role is included
+        session.user.role = token.role;
       }
       return session;
-    }
-  },   
+    },
+  },
   pages: {
     signIn: "/login",
     error: "/login",
