@@ -51,7 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user._id.toString(),
           name: user.name,
           email: user.email,
-          role: user.role || "author", // ✅ Default role: "author"
+          role: user.role || "Author", // ✅ Default role: "author"
         };
       },
     }),
@@ -67,7 +67,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: user.name,
             email: user.email,
             password: "", // OAuth users don’t have a password
-            role: "author", // ✅ Default role: "author"
+            role: "Author", // ✅ Default role: "author"
             isVerified: true,
           });
           await existingUser.save();
@@ -83,7 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.role = user.role || "author"; // ✅ Default role: "author"
+        token.role = user.role || "Author"; // ✅ Default role: "author"
       }
       return token;
     },
@@ -92,7 +92,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id;
         session.user.email = token.email;
         session.user.name = token.name;
-        session.user.role = token.role || "author"; // ✅ Default role: "author"
+        session.user.role = token.role || "Author"; // ✅ Default role: "author"
       }
       return session;
     },
