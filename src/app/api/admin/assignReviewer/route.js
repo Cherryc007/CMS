@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import connectDB from "@/lib/connectDB";
 import Paper from "@/models/paperModel";
-import { auth } from "@/auth";
+import authOptions from "@/authOptions"; // Ensure this file properly exports auth options for NextAuth
 
 export async function POST(request) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
     
     // Check if user is authenticated and has admin role
     if (!session || session.user.role !== "admin") {
@@ -62,4 +63,4 @@ export async function POST(request) {
       message: "Failed to assign reviewer" 
     }, { status: 500 });
   }
-} 
+}
