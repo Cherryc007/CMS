@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import authOptions from "@/lib/authOptions"; 
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -6,7 +7,7 @@ import connectDB from "./lib/connectDB";
 import User from "./models/userModel";
 import GoogleProvider from "next-auth/providers/google";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const { handlers, signIn, signOut, auth } = NextAuth(authOptions)({
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GitHubProvider({
