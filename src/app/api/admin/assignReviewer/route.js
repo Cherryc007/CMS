@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "next-auth";
+import { getServerSession } from "next-auth";
 import connectDB from "@/lib/connectDB";
 import Paper from "@/models/paperModel";
 import authOptions from "@/lib/authOptions"; // Ensure this file properly exports auth options for NextAuth
 
 export async function POST(request) {
   try {
-    const session = await auth(authOptions);
+    const session = await getServerSession(authOptions);
     
     // Check if user is authenticated and has admin role
     if (!session || session.user.role !== "admin") {
