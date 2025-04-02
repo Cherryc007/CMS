@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/connectDB";
 import Post from "@/models/postModel";
 import { auth } from "@/auth";
+import { authOptions } from "@/lib/authOptions";
 
 export async function POST(request) {
   try {
