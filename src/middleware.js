@@ -1,72 +1,63 @@
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import {getToken} from "next-auth/jwt"
 
 export default async function middleware(request) {
+  // Get the pathname of the request
   const path = request.nextUrl.pathname;
-  console.log(`🔍 Requested Path: ${path}`);
-
-  // Get the auth token
+  
+  // Get the token using next-auth
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-  console.log("🔑 Token Data:", token);
-
+  
   // Check if the user is authenticated
   const isAuthenticated = !!token;
-  console.log(`✅ Is Authenticated: ${isAuthenticated}`);
-
-  // Public paths that don't require authentication
-  const isPublicPath = path === '/' || path === '/login' || path === '/register' || path === "/signup";
-
-  // Common paths for all authenticated users
+  
+  // Define public paths that don't require authentication
+  const isPublicPath = path === '/' || path === '/login' || path === '/register';
+  
+  // Define paths that authenticated users can access without role checks
   const isCommonAuthPath = path === '/home';
-
-  // Redirect to login if not authenticated and accessing a protected page
+  
+  // Redirect to login if not authenticated and trying to access protected pages
   if (!isAuthenticated && !isPublicPath) {
-    console.log(`🔴 Not Authenticated: Redirecting to /login`);
     return NextResponse.redirect(new URL('/login', request.url));
   }
-
+  
   // Redirect to home if already authenticated but trying to access login/register
   if (isAuthenticated && isPublicPath) {
-    console.log(`🟡 Authenticated User Trying to Access Public Path: Redirecting to /home`);
     return NextResponse.redirect(new URL('/home', request.url));
   }
-
-  // Allow access to common authenticated paths
+  
+  // Allow access to common authenticated paths without role checks
   if (isAuthenticated && isCommonAuthPath) {
-    console.log(`🟢 Authenticated User Accessing Common Page: Allowing Access`);
     return NextResponse.next();
   }
-
+  
   // Role-based access control
   if (isAuthenticated) {
-    console.log(`🛑 Role-Based Access Check for ${token.role}`);
-
     // Admin-only routes
-    if (path.startsWith('/admin-dashboard') || path === '/conference-creation' || path === '/admin-dashboard/create-post') {
+    if (path.startsWith('/admin-dashboard') || 
+        path === '/conference-creation' || 
+        path === '/admin-dashboard/create-post') {
       if (token.role !== 'admin') {
-        console.log(`🔒 Access Denied for ${token.role}: Redirecting to /home`);
         return NextResponse.redirect(new URL('/home', request.url));
       }
     }
-
+    
     // Author-only routes
     if (path.startsWith('/author-dashboard')) {
       if (token.role !== 'author') {
-        console.log(`🔒 Access Denied for ${token.role}: Redirecting to /home`);
         return NextResponse.redirect(new URL('/home', request.url));
       }
     }
-
+    
     // Reviewer-only routes
     if (path.startsWith('/reviewer-dashboard') || path.startsWith('/review-paper')) {
       if (token.role !== 'reviewer') {
-        console.log(`🔒 Access Denied for ${token.role}: Redirecting to /home`);
         return NextResponse.redirect(new URL('/home', request.url));
       }
     }
   }
-
-  console.log(`✅ Access Granted: Proceeding with Request`);
+  
   return NextResponse.next();
 }
 
