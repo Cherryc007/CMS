@@ -63,13 +63,12 @@ export default async function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/home',
     '/admin-dashboard/:path*',
     '/author-dashboard/:path*',
     '/reviewer-dashboard/:path*',
     '/review-paper/:path*',
     '/conference-creation',
-    '/admin-dashboard/create-post',
-    '/home'
+    '/admin-dashboard/create-post'
   ],
 };
