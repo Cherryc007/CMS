@@ -11,6 +11,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
     strategy: "jwt", // ✅ Ensures token-based sessions (fully supported on Vercel)
   },
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true, // make sure it's secure for production
+        domain: ".https://cms-lpu.vercel.app/", // <-- IMPORTANT! use your real domain like .cms-cms.netlify.app if netlify
+      },
+    },
+  },
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_ID,
