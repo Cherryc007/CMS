@@ -18,8 +18,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: true, // make sure it's secure for production
-        domain: ".cms-lpu.vercel.app/", // <-- IMPORTANT! use your real domain like .cms-cms.netlify.app if netlify
+        secure: true, 
+        domain: ".cms-lpu.vercel.app", // <-- YOUR REAL DOMAIN
       },
     },
   },
