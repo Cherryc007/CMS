@@ -9,6 +9,7 @@ import User from "./models/userModel";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   session: {
+    trustHost: true,
     strategy: "jwt", // ✅ Ensures token-based sessions (fully supported on Vercel)
   },
   cookies: {
@@ -19,7 +20,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: true, 
-        domain: ".cms-lpu.vercel.app", // <-- YOUR REAL DOMAIN
+        //domain: ".cms-lpu.vercel.app", // <-- YOUR REAL DOMAIN
       },
     },
   },
